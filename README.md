@@ -5,11 +5,12 @@ Classifies tires into 5 visual condition classes and separately flags expiration
 on the DOT/manufacturing-date code.
 
 ## Classes
-- Healthy
-- Zero Tread
-- Low Tread
-- Sidewall Damaged
-- Uneven Wear
+
+* Healthy
+* Zero Tread
+* Low Tread
+* Sidewall Damaged
+* Uneven Wear
 
 (Expiration is a separate binary flag, not a 6th visual class — see `src/ocr/` once added.)
 
@@ -25,28 +26,67 @@ results/     Metrics/plots per model run, for side-by-side comparison
 
 ## Setup (local to install packages)
 
-
 ```bash
 python -m venv venv
-venv\Scripts\activate on Windows to activate the environment and for mac : source venv/bin/activate 
+venv\Scripts\activate
+python -m pip install -r requirements.txt
+```
+
+For macOS/Linux:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
 Then follow `data/README.md` to get the dataset onto disk.
 
-
 ## Workflow
 
-1. `notebooks/01_data_prep.ipynb` — split dataset into train/val/test, sanity-check class balance
+1. `notebooks/01_data_prep.ipynb` — split dataset into train/val/test and sanity-check class balance
 2. `notebooks/02_cnn_baseline.ipynb` — train the from-scratch CNN
 3. `notebooks/03_yolo_transfer.ipynb` — fine-tune YOLO11-cls (transfer learning)
-4. `notebooks/04_compare_results.ipynb` — load both models' metrics from `results/` and compare
+4. `notebooks/06_mobilenet_v3_transfer.ipynb` — train and evaluate MobileNetV3-Large using transfer learning
+5. `notebooks/04_compare_results.ipynb` — load model metrics from `results/` and compare completed models
+
+## MobileNetV3-Large Contribution
+
+This project is a team project. My contribution was the implementation and evaluation of the
+MobileNetV3-Large transfer-learning pipeline.
+
+### MobileNetV3-Large
+
+The MobileNetV3-Large model was used with ImageNet-pretrained weights for 5-class tire
+condition classification.
+
+My work included:
+
+* Loading ImageNet-pretrained MobileNetV3-Large
+* Using 224 × 224 input preprocessing
+* Freezing the pretrained backbone
+* Replacing the final classifier for the 5 tire-condition classes
+* Using `CrossEntropyLoss`
+* Using the Adam optimizer
+* Performing hyperparameter grid search
+* Testing learning rates `0.001` and `0.0001`
+* Testing batch sizes `16` and `32`
+* Selecting the final configuration based on validation accuracy
+* Training the final model with early stopping
+* Evaluating the model on validation and test sets
+* Calculating accuracy, precision, recall, F1-score, and confusion matrix
+* Saving the trained model and experiment results to the appropriate project locations
+
+### Relevant Files
+
+```text
+notebooks/06_mobilenet_v3_transfer.ipynb
+results/mobilenet_v3_large/
+```
 
 ## Team workflow
 
 We **do not work directly on `main`**. `main` is always the clean and final version.
-
-
 
 1. **Update `dev` before starting:**
 
@@ -61,7 +101,7 @@ We **do not work directly on `main`**. `main` is always the clean and final vers
    git checkout -b <your branch name>
    ```
 
-   Examples: `arhan-cnn-training`, `arnob-data-prep`, `yolo-tuning`
+   Examples: `arhan-cnn-training`, `arnob-data-prep`, `yolo-tuning`, `swapnil-mobilenetv3`
 
 3. **Work and commit regularly:**
 
@@ -83,10 +123,9 @@ We **do not work directly on `main`**. `main` is always the clean and final vers
 6. **After merging into `dev`:**
    Test the complete project to ensure everyone's changes work together.
 
+## Stay updated with dev branch when working on your own branch
 
-## Stay updated with dev branch when working on you own branch :
-
-  ```bash
-  git checkout <your branch name>
-  git pull origin dev
-  ```
+```bash
+git checkout <your branch name>
+git pull origin dev
+```
